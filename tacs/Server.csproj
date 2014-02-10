@@ -46,6 +46,7 @@
     <Compile Include="Entities\Board.cs" />
     <Compile Include="Entities\Client.cs" />
     <Compile Include="Entities\Game.cs" />
+    <Compile Include="Network\ConcurrentDictionary.cs" />
     <Compile Include="Network\Packet.cs" />
     <Compile Include="Network\Server.cs" />
     <Compile Include="Network\Listener.cs" />
