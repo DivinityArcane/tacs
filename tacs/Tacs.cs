@@ -11,7 +11,7 @@ namespace tacs
 {
     class Tacs
     {
-        public const string Version = "0.219";
+        public const string Version = "0.304";
         public static Encoding Encoding = System.Text.Encoding.UTF8;
         public static Server server;
         public static ManualResetEvent Wait = new ManualResetEvent(false);

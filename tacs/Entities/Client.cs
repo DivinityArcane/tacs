@@ -21,6 +21,7 @@ namespace tacs.Entities
         public bool disposed = false;
         public uint Pinged = 0;
         public uint Challenged = 0;
+        public uint QueueTime = 0;
         public String Target;
         public Game Game;
 
@@ -55,7 +56,7 @@ namespace tacs.Entities
             Timeout.Elapsed += delegate
             {
                 if (state == ClientState.Connecting)
-                    Disconnect("LOGIN TIMEOUT");
+                    Disconnect("Login timeout");
             };
             Timeout.Start();
         }
@@ -99,7 +100,7 @@ namespace tacs.Entities
 
                     if (!pkt.Contains("\a"))
                     {
-                        Disconnect("INVALID PACKET");
+                        Disconnect("Invalid client packet!");
                         return;
                     }
 
@@ -121,7 +122,7 @@ namespace tacs.Entities
             catch
             {
                 if (state != ClientState.Disconnected)
-                    Disconnect("READ ERROR");
+                    Disconnect("Error during client read!");
             }
         }
 
@@ -134,7 +135,7 @@ namespace tacs.Entities
             catch
             {
                 if (state != ClientState.Disconnected)
-                    Disconnect("SEND ERROR");
+                    Disconnect("Error during client send!");
             }
         }
 

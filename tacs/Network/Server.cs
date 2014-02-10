@@ -44,7 +44,7 @@ namespace tacs.Network
                     }
                     else if (ts - client.Pinged > timeout)
                     {
-                        client.Disconnect("TIMEOUT");
+                        client.Disconnect("Timed out");
                     }
                 }
             };
@@ -178,7 +178,7 @@ namespace tacs.Network
 
                         if (chunks.Length < 2 || chunks[1].Length < 3 || chunks[1].Length > 20)
                         {
-                            client.Error("INVALID NAME LENGTH. MUST BE BETWEEN 3 AND 20.");
+                            client.Error("Invalid name length! Name must be between 3 and 20 characters long!");
                             return;
                         }
 
@@ -188,7 +188,7 @@ namespace tacs.Network
 
                         if (name != safename)
                         {
-                            client.Error("INVALID CHARACTER(S) IN NAME. CAN ONLY CONTAIN a-z, A-Z, 0-9, - AND _");
+                            client.Error("Invalid character(s) in name. Names can only contain a-z, A-Z, 0-9, - and _");
                             return;
                         }
 
@@ -196,15 +196,13 @@ namespace tacs.Network
 
                         if (key.Contains("admin") || key.Contains("server") || key.Contains("staff") || key.Contains("moderator"))
                         {
-                            client.Disconnect("RESERVED NAME");
+                            client.Disconnect("That name is reserved!");
                             return;
                         }
 
                         if (ClientNames.Values.Contains(key))
                         {
-                            p = new Packet("ERROR");
-                            p.AddChunk("NAME TAKEN");
-                            client.Send(p);
+                            client.Error("That name is already in use at the moment.");
                             return;
                         }
 
@@ -238,7 +236,7 @@ namespace tacs.Network
                     {
                         if (client.Pinged == 0 || chunks.Length < 2 || chunks[1] != client.Pinged.ToString())
                         {
-                            client.Disconnect("INVALID PONG");
+                            client.Disconnect("Invalid pong payload!");
                             return;
                         }
 
@@ -252,7 +250,7 @@ namespace tacs.Network
                     {
                         if (chunks.Length < 2)
                         {
-                            client.Error("INVALID MESSAGE");
+                            client.Error("Invalid message payload!");
                             return;
                         }
 
@@ -280,6 +278,12 @@ namespace tacs.Network
                         if (client.State != ClientState.LobbyIdle) break;
                         if (ClientQueue.Contains(client)) break;
 
+                        if (client.QueueTime != 0 && Tacs.TS - client.QueueTime < 30)
+                        {
+                            client.Error("Cannot enter the play queue so quickly after you last entered!");
+                            return;
+                        }
+
                         lock (ClientQueue)
                         {
                             ClientQueue.Add(client);
@@ -290,6 +294,7 @@ namespace tacs.Network
                         p.AddChunk(client.Name);
                         p.AddChunk("1");
                         SendAll(p);
+                        client.QueueTime = Tacs.TS;
 
                         ProcessQueue();
 
@@ -324,7 +329,7 @@ namespace tacs.Network
                         if (client.State != ClientState.LobbyIdle) break;
                         if (chunks.Length < 2)
                         {
-                            client.Error("INVALID CHALLENGE PAYLOAD");
+                            client.Error("Invalid challenge payload!");
                             return;
                         }
 
@@ -332,7 +337,7 @@ namespace tacs.Network
                         if ((delay = Tacs.TS - client.Challenged) < 30)
                         {
                             delay = 30 - delay;
-                            client.Error(string.Format("CANNOT CHALLENGE AGAIN FOR ANOTHER {0} SECOND{1}", delay, delay == 1 ? "" : "S"));
+                            client.Error(string.Format("Cannot challenge again for {0} second{1}!", delay, delay == 1 ? "" : "s"));
                             return;
                         }
 
@@ -340,13 +345,13 @@ namespace tacs.Network
 
                         if (name == client.Name.ToLower())
                         {
-                            client.Error("CANNOT CHALLENGE SELF");
+                            client.Error("Cannot challenge yourself!");
                             return;
                         }
 
                         if (!ClientNames.Values.Contains(name))
                         {
-                            client.Error("INVALID NAME OR USER IS OFFLINE");
+                            client.Error("Invalid name, or that user is offline!");
                             return;
                         }
 
@@ -354,7 +359,7 @@ namespace tacs.Network
 
                         if (other == null)
                         {
-                            client.Error("INVALID CLIENT FOR CHALLENGE");
+                            client.Error("Invalid client/challenge target!");
                             return;
                         }
 
@@ -375,7 +380,7 @@ namespace tacs.Network
                         if (client.State != ClientState.LobbyIdle) break;
                         if (chunks.Length < 2)
                         {
-                            client.Error("INVALID ACCEPT PAYLOAD");
+                            client.Error("Invalid accept payload!");
                             return;
                         }
 
@@ -383,13 +388,13 @@ namespace tacs.Network
 
                         if (name == client.Name.ToLower())
                         {
-                            client.Error("CANNOT CHALLENGE SELF");
+                            client.Error("Cannot challenge yourself!");
                             return;
                         }
 
                         if (!ClientNames.Values.Contains(name))
                         {
-                            client.Error("INVALID NAME OR USER IS OFFLINE");
+                            client.Error("Invalid name, or that user is offline!");
                             return;
                         }
 
@@ -397,13 +402,13 @@ namespace tacs.Network
 
                         if (other == null)
                         {
-                            client.Error("INVALID CLIENT FOR CHALLENGE");
+                            client.Error("Invalid client/challenge target!");
                             return;
                         }
 
                         if (other.Target != client.Name)
                         {
-                            client.Error("TARGET HAS NOT CHALLENGED YOU OR HAS CHALLENGED SOMEONE ELSE");
+                            client.Error("Target has not challenged you, or has challenged someone else since then!");
                             return;
                         }
 
@@ -424,13 +429,13 @@ namespace tacs.Network
                         if (client.State != ClientState.InGame) break;
                         if (chunks.Length < 2)
                         {
-                            client.Error("INVALID MARK PAYLOAD");
+                            client.Error("Invalid mark payload!");
                             return;
                         }
 
                         if (client.Game == null)
                         {
-                            client.Error("INVALID GAME");
+                            client.Error("Invalid game state!");
                             return;
                         }
 
@@ -476,7 +481,7 @@ namespace tacs.Network
                 #endregion Mark
 
                 default:
-                    client.Disconnect("UNKNOWN PACKET");
+                    client.Disconnect("Unknown packet type: " + type);
                     break;
             }
         }
